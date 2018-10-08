@@ -46,3 +46,6 @@ spec.add_dependency 'omniauth', '~> 1.0'
 ```
 
 https://github.com/omniauth/omniauth/wiki
+
+```
+```
