@@ -47,5 +47,90 @@ spec.add_dependency 'omniauth', '~> 1.0'
 
 https://github.com/omniauth/omniauth/wiki
 
-```
+```ruby
+gem 'omniauth-github', github: 'intridea/omniauth-github'
+gem 'omniauth-openid', github: 'intridea/omniauth-openid'
+
+use OmniAuth::Builder do
+  provider :github, ENV['GITHUB_KEY'], ENV['GITHUB_SECRET']
+  provider :openid, store: OpenID::Filesystem.new('/tmp')
+end
+
+Rails.application.config.middleware.use OmniAuth::Builder do
+  requrie 'openid/store/filesystem'
+  provider :github, ENV['GITHUB_KEY'], ENV['GITHUB_SECRET']
+  provider :openid, store: OpenID::Store::Filesystem.new('/tmp')
+end
+
+%(get post).each do |method|
+  send(method, "/auth/:provider/callback") do
+    env['ominauth.auth']
+  end
+end
+
+get '/auth/failure' do
+  flash[:notice] = params[:message]
+  redirect '/'
+end
+
+
+class OmniAuth::Strategies::OAuth
+  def initialize(app, name, consumer_key=nil, consumer_secret=nil, consumer_options={}, options={}, &block)
+    self.consumer_key = consumer_key
+    self.consumer_secret = consumer_secret
+    self.consumer_options = consumer_options
+  end
+  self.options[:open_timeout] ||= 30
+  self.options[:read_timeout] ||= 30
+  self.options[:authorize_params] = options[:authorize_params] || {}
+end
+
+class OmniAuth::Strategies::OAuth
+  args [:consumer_key, :consumer_secret]
+  option :consumer_options, {}
+  options :open_timeout, 30
+  options :read_timeout, 30
+  options :authorize_params, {}
+end
+
+class OmniAuth::Strategies::MyStrategy < OmniAuth::Strategies::OAuth
+  uid { access_token.params['user_id'] }
+  info do
+    {
+      :first_name => raw_info['firstName'],
+      :last_name => raw_info['lastName'],
+      :email => raw_info['email']
+    }
+  end
+  extra do
+    {'raw_info' => raw_info}
+  end
+  def raw_info
+    access_token.get('/info')
+  end
+end
+
+
+use OmniAuth::Builder do
+  provider :example, :setup => lambda{|env| env['omniauth.strategy'].options[:foo] = env['rack.session']['foo']}
+end
+
+use OmniAuth::Builder do
+  provider :example, :form => SessionController.action(:new)
+end
+
+class SessionsController < ApplicationController
+  protect_from_forgery :except => [:callback]
+  def callback;
+  end
+end
+
+Rails.application.config.middleware.use OmniAuth::Strategies::Facebook, 'APP_ID', 'APP_SECRET',
+  {:client_options => {:ssl => {:ca_path => "/etc/ssl/certs"}}}
+
+require "openid/fetchers"
+OpenId.fetcher.ca_file = "/etc/ssl/certs/ca-certificates.crt"
+
+
+
 ```
