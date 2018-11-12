@@ -42,7 +42,8 @@ OmniAuth.config.logger = Rails.logger
 
 spec.add_dependency 'omniauth', '~> 1.0'
 
-
+date
+curl http://127.0.0.1:3000/auth/twitter/callback
 ```
 
 https://github.com/omniauth/omniauth/wiki
@@ -131,6 +132,23 @@ Rails.application.config.middleware.use OmniAuth::Strategies::Facebook, 'APP_ID'
 require "openid/fetchers"
 OpenId.fetcher.ca_file = "/etc/ssl/certs/ca-certificates.crt"
 
+use OmniAuth::Builder do
+  provider :example, :setup => lambda{|env| env['omniauth.strategy'].options[:foo] = env['rack.session']['foo']}
+end
 
+use OmniAuth::Builder do
+  provider :example, :from => SessionController.action(:new)
+end
 
+class SessionsController < ApplicatoinController
+  protect_from_forgery :except => [:callback]
+  def callback;
+  end
+end
+
+Rails.application.config.middleware.use OmniAuth::Strategies::Facebook, 'APP_ID', 'APP_SECRET',
+  {:client_options => {:ssl => {:ca_path => "/etc/ssl/certs"}}}
+  
+require "openid/fetchers"
+OpenId.fetcher.ca_file = "/etc/ssl/certs/ca-certificates.crt"
 ```
