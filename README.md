@@ -152,3 +152,4 @@ Rails.application.config.middleware.use OmniAuth::Strategies::Facebook, 'APP_ID'
 require "openid/fetchers"
 OpenId.fetcher.ca_file = "/etc/ssl/certs/ca-certificates.crt"
 ```
+
